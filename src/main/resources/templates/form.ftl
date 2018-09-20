@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="css/form-mini.css">
     <script src="js/jquery-3.3.1.slim.js"></script>
     <link rel="stylesheet" href="css/bootstrap.min.css">
+    <script src="http://maps.google.com/maps/api/js?sensor=false" type="text/javascript"></script>
     <script src="js/bootstrap.min.js"></script>
     <style>
         body {font-family: Arial, Helvetica, sans-serif;}
@@ -58,47 +59,31 @@
     </style>
 
     <script>
-        var indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB
 
-        var dataBase = indexedDB.open("encuestasPUCMM", 1);
-
-        dataBase.onupgradeneeded = function (e) {
-
-            active = dataBase.result;
-
-
-            var encuestas = active.createObjectStore("encuestas", { keyPath : 'id', autoIncrement : true });
-
-            //creando los indices. (Dado por el nombre, campo y opciones)
-            encuestas.createIndex('ind_id', 'id', {unique : false});
-
-        };
-
-        //El evento que se dispara una vez, lo
-        dataBase.onsuccess = function (e) {
-            console.log('Proceso ejecutado de forma correctamente');
-        };
-
-        dataBase.onerror = function (e) {
-            console.error('Error en el proceso: '+e.target.errorCode);
+        window.onload = function() {
+            encuestasListado();
         };
 
         function hayTabla(encuestaList) {
-            //creando la tabla...
             var tabla = document.createElement("table");
             tabla.className = "table";
-            var filaTabla = tabla.insertRow();
-            filaTabla.style.backgroundColor = "lightblue";
-            filaTabla.insertCell().textContent = "Nombre";
-            filaTabla.insertCell().textContent = "Sector";
-            filaTabla.insertCell().textContent = "Nivel";
+            var row = tabla.insertRow();
+            row.style.backgroundColor = "lightblue";
+            row.insertCell().textContent = "ID";
+            row.insertCell().textContent = "Nombre";
+            row.insertCell().textContent = "Sector";
+            row.insertCell().textContent = "Nivel";
 
             for (var key in encuestaList) {
-                //
-                filaTabla = tabla.insertRow();
-                filaTabla.insertCell().textContent = ""+encuestaList[key].nombre;
-                filaTabla.insertCell().textContent = ""+encuestaList[key].sector;
-                filaTabla.insertCell().textContent = ""+encuestaList[key].nivel;
+
+                row = tabla.insertRow();
+                row.insertCell().textContent = ""+encuestaList[key].id;
+                row.insertCell().textContent = ""+encuestaList[key].nombre;
+                row.insertCell().textContent = ""+encuestaList[key].sector;
+                row.insertCell().textContent = ""+encuestaList[key].nivel;
+
+
+
             }
 
             document.getElementById("encuestasTabla").innerHTML="";
@@ -106,22 +91,21 @@
         }
 
         function encuestasListado() {
-            //por defecto si no lo indico el tipo de transacción será readonly
+
             var data = dataBase.result.transaction(["encuestas"]);
             var encuestas = data.objectStore("encuestas");
             var contador = 0;
             var encuestaDatos=[];
 
-            //abriendo el cursor.
+
             encuestas.openCursor().onsuccess=function(e) {
-                //recuperando la posicion del cursor
                 var cursor = e.target.result;
                 if(cursor){
                     contador++;
-                    //recuperando el objeto.
+
                     encuestaDatos.push(cursor.value);
 
-                    //Función que permite seguir recorriendo el cursor.
+
                     cursor.continue();
 
                 }else {
@@ -129,22 +113,27 @@
                 }
             };
 
-            //Una vez que se realiza la operación llamo la impresión.
             data.oncomplete = function () {
+                var i = 0;
+                for (var key in encuestaDatos) {
+                    loc[i] ={'nom': encuestaDatos[key].nombre,
+                    'lat': parseFloat(encuestaDatos[key].latitud),
+                    'lon': parseFloat(encuestaDatos[key].longitud),
+                    'n':  i+1};
+
+                    i = i +1;
+                }
                 hayTabla(encuestaDatos);
+
+
             }
 
         }
 
-
         function agregarEncuesta() {
-            var dbActiva = dataBase.result; //Nos retorna una referencia al IDBDatabase.
+            var db = dataBase.result;
+            var transaccion = db.transaction(["encuestas"], "readwrite");
 
-            //Para realizar una operación de agreagr, actualización o borrar.
-            // Es necesario abrir una transacción e indicar un modo: readonly, readwrite y versionchange
-            var transaccion = dbActiva.transaction(["encuestas"], "readwrite");
-
-            //Manejando los errores.
             transaccion.onerror = function (e) {
                 alert(request.error.name + '\n\n' + request.error.message);
             };
@@ -152,22 +141,22 @@
             transaccion.oncomplete = function (e) {
                 document.querySelector("#nombre").value = '';
                 modal.style.display = "none";
+                encuestasListado();
             };
 
-            //abriendo la colección de datos que estaremos usando.
             var encuestas = transaccion.objectStore("encuestas");
 
-            //Para agregar se puede usar add o put, el add requiere que no exista
-            // el objeto.
+
             var request = encuestas.put({
                 nombre: document.querySelector("#nombre").value,
                 sector: document.querySelector("#sector").value,
                 nivel: document.querySelector("#nivel").value,
-                //latidud: document.querySelector("#latitud").value,
-                //longitud: document.querySelector("#longitud").value
+                latitud: lati,
+                longitud: long
 
 
-            });
+
+        });
 
 
             request.onerror = function (e) {
@@ -176,6 +165,22 @@
                 alert(mensaje)
             };
 
+        }
+
+        function borrarEncuesta() {
+
+            var idEncuesta = parseInt(document.querySelector("#idBorrar").value);
+
+            var data = dataBase.result.transaction(["encuestas"], "readwrite");
+            var encuestas = data.objectStore("encuestas");
+
+            encuestas.delete(idEncuesta).onsuccess = function (e) {
+                modalBorrar.style.display = "none";
+                encuestasListado();
+            };
+            encuestas.delete(idEncuesta).onerror = function (e) {
+                console.log("Error al borrar")
+            };
         }
 
 
@@ -197,8 +202,15 @@
 
 
         <button id="myBtn">Agregar Encuesta</button>
-
+        <button class="btn btn-primary btn-xs my-xs-btn" type="button">
+        <span class="glyphicon glyphicon-pencil"></span> Editar
+        </button>
+        <button class="btn btn-danger btn-xs my-xs-btn" type="button" id="btnBorrar">
+        <span class="glyphicon glyphicon-alert"></span>
+        Borrar</button>
         <!-- The Modal -->
+        <input type="hidden" id="lati" >
+        <input type="hidden" id="long" >
         <div id="myModal" class="modal">
     <div class="modal-content">
         <span class="close">&times;</span>
@@ -211,6 +223,7 @@
             <div class="form-row">
                 <input type="text" id="sector" placeholder="Sector">
             </div>
+
 
             <div class="form-row">
                 <label>
@@ -237,7 +250,31 @@
     </div>
     </div>
 
-<button onclick="encuestasListado()">Lista de Encuestas</button>
+
+<button id="btnMap">Mapa</button>
+    <div id="myModalMap" class="modal">
+        <div class="modal-content">
+            <span class="closeMap">&times;</span>
+            <div id="map" style="min-height: 200px; min-width: 200px; margin: auto; max-height: 300px; max-width: 400px;">
+            </div>
+            </div>
+    </div>
+
+    <div id="myModalBorrar" class="modal">
+        <div class="modal-content">
+            <div class="form-mini" >
+            <span class="closeBorrar">&times;</span>
+            <div class="form-row">
+                <input type="text" id="idBorrar" placeholder="Id de la Encuesta">
+            </div>
+            <div class="form-row form-last-row">
+                <a class="text-danger">UNA VEZ BORRADA LA ENCUESTA NO SE PUEDE RECUPERAR</a>
+                <button class="btn-danger" onclick="borrarEncuesta()">Borrar Encuesta</button>
+            </div>
+            </div>
+        </div>
+        </div>
+
     <table id="encuestasTabla" class="table">
 
     </table>
@@ -246,32 +283,185 @@
 </div>
 
 <script>
-    // Get the modal
+
+    var indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB
+
+    var long;
+    var lati;
+
+
+    var dataBase = indexedDB.open("encuestasPUCMM", 1);
+
+    dataBase.onupgradeneeded = function (e) {
+
+        active = dataBase.result;
+
+
+        var encuestas = active.createObjectStore("encuestas", { keyPath : 'id', autoIncrement : true });
+
+        encuestas.createIndex('ind_id', 'id', {unique : false});
+
+    };
+
+    dataBase.onsuccess = function (e) {
+        console.log('Proceso ejecutado de forma correctamente');
+        encuestasListado();
+    };
+
+    dataBase.onerror = function (e) {
+        console.error('Error en el proceso: '+e.target.errorCode);
+    };
+
+
     var modal = document.getElementById('myModal');
 
-    // Get the button that opens the modal
     var btn = document.getElementById("myBtn");
 
-    // Get the <span> element that closes the modal
     var span = document.getElementsByClassName("close")[0];
 
-    // When the user clicks the button, open the modal
     btn.onclick = function() {
         modal.style.display = "block";
-    }
+    };
 
-    // When the user clicks on <span> (x), close the modal
     span.onclick = function() {
         modal.style.display = "none";
-    }
+    };
 
-    // When the user clicks anywhere outside of the modal, close it
     window.onclick = function(event) {
         if (event.target == modal) {
             modal.style.display = "none";
         }
+    };
+
+    var modalBorrar = document.getElementById('myModalBorrar');
+
+    var btnBorrar = document.getElementById("btnBorrar");
+
+    var spanBorrar = document.getElementsByClassName("closeBorrar")[0];
+
+    btnBorrar.onclick = function() {
+        modalBorrar.style.display = "block";
+    };
+
+    spanBorrar.onclick = function() {
+        modalBorrar.style.display = "none";
+    };
+
+    window.onclick = function(event) {
+        if (event.target == modalBorrar) {
+            modalBorrar.style.display = "none";
+        }
+    };
+
+    var modalMap = document.getElementById('myModalMap');
+
+    var btnMap = document.getElementById("btnMap");
+
+    var spanMap = document.getElementsByClassName("closeMap")[0];
+
+    btnMap.onclick = function() {
+        modalMap.style.display = "block";
+    };
+
+    spanMap.onclick = function() {
+        modalMap.style.display = "none";
+    };
+
+    window.onclick = function(event) {
+        if (event.target == modalMap) {
+            modalMap.style.display = "none";
+        }
+    };
+
+    var geoSettings = {
+        enableHighAccuracy: true,
+        timeout: 6000,
+        maximumAge: 0
+    };
+    var loc = {};
+    $(document).ready(function(){
+
+        navigator.geolocation.getCurrentPosition(function(pos){
+            var coor = pos.coords;
+            lati = coor.latitude;
+            long = coor.longitude;
+        }, function(){
+            alert("No tiene permiso");
+        }, geoSettings);
+
+
+    });
+
+
+    var data = dataBase.result.transaction(["encuestas"]);
+    var encuestas = data.objectStore("encuestas");
+    var contador = 0;
+    var encuestaDatos=[];
+
+
+    encuestas.openCursor().onsuccess=function(e) {
+        var cursor = e.target.result;
+        if(cursor){
+            contador++;
+
+            encuestaDatos.push(cursor.value);
+
+
+            cursor.continue();
+
+        }else {
+            console.log("La cantidad de registros recuperados es: "+contador);
+        }
+    };
+
+    data.oncomplete = function () {
+        var i = 0;
+        for (var key in encuestaDatos) {
+            loc[i] ={'nom': encuestaDatos[key].nombre,
+                'lat': parseFloat(encuestaDatos[key].latitud),
+                'lon': parseFloat(encuestaDatos[key].longitud),
+                'n':  i+1};
+
+            i = i +1;
+        }
+
+
+
+    }
+
+
+    var locations = [
+        [loc[0].nom, loc[0].lat, loc[0].lon, loc[0].n],
+        ['Coogee Beach', -33.923036, 151.259052, 5],
+        ['Cronulla Beach', -34.028249, 151.157507, 3],
+        ['Manly Beach', -33.80010128657071, 151.28747820854187, 2],
+        ['Maroubra Beach', -33.950198, 151.259302, 1]
+    ];
+    var map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 10,
+        center: new google.maps.LatLng(-33.92, 151.25),
+        mapTypeId: google.maps.MapTypeId.ROADMAP
+    });
+
+    var infowindow = new google.maps.InfoWindow();
+
+    var marker, i;
+
+    for (i = 0; i < locations.length; i++) {
+        marker = new google.maps.Marker({
+            position: new google.maps.LatLng(locations[i][1], locations[i][2]),
+            map: map
+        });
+
+        google.maps.event.addListener(marker, 'click', (function(marker, i) {
+            return function() {
+                infowindow.setContent(locations[i][0]);
+                infowindow.open(map, marker);
+            }
+        })(marker, i));
     }
 </script>
+
 
 </body>
 

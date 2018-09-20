@@ -1,5 +1,6 @@
 CACHE MANIFEST
 
+CACHE:
 form.ftl
 css/demo.css
 css/form-mini.css
