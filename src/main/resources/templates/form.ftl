@@ -75,7 +75,7 @@
 
 
         <button id="myBtn">Agregar Encuesta</button>
-        <button class="btn btn-primary btn-xs my-xs-btn" type="button">
+        <button class="btn btn-primary btn-xs my-xs-btn" type="button" id="myBtnEditar">
         <span class="glyphicon glyphicon-pencil"></span> Editar
         </button>
         <button class="btn btn-danger btn-xs my-xs-btn" type="button" id="btnBorrar">
@@ -87,21 +87,21 @@
 
         <div id="myModal" class="modal">
     <div class="modal-content">
-        <span class="close">&times;</span>
+        <span  class="close">&times;</span>
         <div class="form-mini" >
 
             <div class="form-row">
-                <input type="text" id="nombre" placeholder="Nombre">
+                <input type="text" id="nombre" placeholder="Nombre" style="min-height: 42px; min-width: 172px; margin: auto; max-height: 42px; max-width: 180px;">
             </div>
 
             <div class="form-row">
-                <input type="text" id="sector" placeholder="Sector">
+                <input type="text" id="sector" placeholder="Sector" style="min-height: 42px; min-width: 172px; margin: auto; max-height: 42px; max-width: 180px;">
             </div>
 
 
             <div class="form-row">
                 <label>
-                    <select id="nivel">
+                    <select id="nivel" style="min-height: 42px; min-width: 172px; margin: auto; max-height: 42px; max-width: 180px;">
                         <option>Nivel Escolar...</option>
                         <option>Basico</option>
                         <option>Medio</option>
@@ -148,6 +148,45 @@
             </div>
         </div>
         </div>
+
+    <div id="myModalEditar" class="modal">
+        <div class="modal-content">
+            <div class="form-mini" >
+                <span class="closeEditar">&times;</span>
+                <div class="form-row">
+                    <label for="idEditar">ID:</label><input type="text" id="idEditar" style="min-height: 30px; min-width: 70px; margin: auto; max-height: 30px; max-width: 80px;">
+
+                </div><button class="btn btn-danger btn-xs my-xs-btn" type="button" id="btnBuscar" onclick="buscarEncuesta()">
+                <span class="glyphicon glyphicon-search"></span>
+                Buscar</button>
+
+                <div class="form-row">
+                    <label for="nombreEditar">Nombre:</label><input type="text" id="nombreEditar" style="min-height: 42px; min-width: 172px; margin: auto; max-height: 42px; max-width: 180px;" disabled>
+                </div>
+
+                <div class="form-row">
+                    <label for="sectorEditar">Sector</label><input type="text" id="sectorEditar" style="min-height: 42px; min-width: 172px; margin: auto; max-height: 42px; max-width: 180px;" disabled>
+                </div>
+
+                <div class="form-row">
+                    <label>
+                        <select id="nivelEditar" style="min-height: 42px; min-width: 172px; margin: auto; max-height: 42px; max-width: 180px;" disabled>
+                            <option>Nivel Escolar...</option>
+                            <option>Basico</option>
+                            <option>Medio</option>
+                            <option>Grado Universitario</option>
+                            <option>Postgrado</option>
+                            <option>Doctorado</option>
+                        </select>
+                    </label>
+                </div>
+
+                <div class="form-row form-last-row">
+                    <button class="btn-danger" onclick="editarEncuesta()">Editar Encuesta</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <table id="encuestasTabla" class="table">
 
@@ -257,45 +296,43 @@
 
         data.oncomplete = function () {
 
-
-            var map = new google.maps.Map(document.getElementById('map'), {
-                zoom: 10,
-                center: new google.maps.LatLng(19.44, -70.677),
-                mapTypeId: google.maps.MapTypeId.ROADMAP
-            });
-
-            var infowindow = new google.maps.InfoWindow();
-
-
-            var marker, i = 0;
-            for (var key in encuestaDatos) {
-
-                marker = new google.maps.Marker({
-                    position: new google.maps.LatLng(parseFloat(encuestaDatos[key].latitud), parseFloat(encuestaDatos[key].longitud)),
-                    map: map
+            try {
+                var map = new google.maps.Map(document.getElementById('map'), {
+                    zoom: 10,
+                    center: new google.maps.LatLng(19.44, -70.677),
+                    mapTypeId: google.maps.MapTypeId.ROADMAP
                 });
 
-                google.maps.event.addListener(marker, 'click', (function(marker, i) {
-                    return function() {
-                        infowindow.setContent(encuestaDatos[key].nombre);
-                        infowindow.open(map, marker);
-                    }
-                })(marker, i));
-                i = i +1;
+                var infowindow = new google.maps.InfoWindow();
+                var marker, i = 0;
+                for (var key in encuestaDatos) {
+
+                    marker = new google.maps.Marker({
+                        position: new google.maps.LatLng(parseFloat(encuestaDatos[key].latitud), parseFloat(encuestaDatos[key].longitud)),
+                        map: map
+                    });
+
+                    google.maps.event.addListener(marker, 'click', (function(marker, i) {
+                        return function() {
+                            infowindow.setContent(encuestaDatos[key].nombre);
+                            infowindow.open(map, marker);
+                        }
+                    })(marker, i));
+                    i = i +1;
+                }
+                hayTabla(encuestaDatos);
+                return encuestaDatos;
+
+            } catch (e) {
+                console.log("El mapa no esta disponible offline")                     // "@Scratchpad/2:2:7\n"
             }
-            hayTabla(encuestaDatos);
-            return encuestaDatos;
+
 
 
         }
 
     }
 
-    function getLocations(encuestaDatos) {
-
-
-        return loc;
-    }
 
 
     function agregarEncuesta() {
@@ -352,6 +389,80 @@
     }
 
 
+    function buscarEncuesta() {
+        var idEncuesta = parseInt(document.querySelector("#idEditar").value);
+
+
+
+        var data = dataBase.result.transaction(["encuestas"], "readwrite");
+        var encuestas = data.objectStore("encuestas");
+
+
+        encuestas.get(idEncuesta).onsuccess = function(e) {
+
+            var resultado = e.target.result;
+
+            if(resultado !== undefined){
+
+                document.getElementById('nombreEditar').value = resultado.nombre;
+                document.getElementById("sectorEditar").value = resultado.sector;
+                document.getElementById("nivelEditar").value = resultado.nivel;
+                document.getElementById("nombreEditar").disabled = false;
+                document.getElementById("sectorEditar").disabled = false;
+                document.getElementById("nivelEditar").disabled = false;
+
+
+            }else{
+                console.log("Encuesta no encontrada.");
+            }
+        };
+
+    }
+    function editarEncuesta() {
+
+        //recuperando la matricula.
+        var idEncuesta = parseInt(document.querySelector("#idEditar").value);
+
+
+        var nombre = document.querySelector("#nombreEditar").value;
+        var sector = document.querySelector("#sectorEditar").value;
+        var nivel = document.querySelector("#nivelEditar").value;
+
+        //abriendo la transacción en modo escritura.
+        var data = dataBase.result.transaction(["encuestas"],"readwrite");
+        var encuestas = data.objectStore("encuestas");
+
+        //buscando estudiante por la referencia al key.
+        encuestas.get(idEncuesta).onsuccess = function(e) {
+
+            var resultado = e.target.result;
+
+            if(resultado !== undefined){
+
+                resultado.nombre = nombre;
+                resultado.sector = sector;
+                resultado.nivel = nivel;
+
+                var solicitudUpdate = encuestas.put(resultado);
+
+                solicitudUpdate.onsuccess = function (e) {
+                    modalEditar.style.display = "none"
+                    encuestasListado();
+                };
+
+                solicitudUpdate.onerror = function (e) {
+                    console.error("Error Datos Actualizados.");
+                }
+
+            }else{
+                console.log("Encuesta no encontrada");
+            }
+        };
+
+
+    }
+
+
 
 </script>
 <script>
@@ -364,7 +475,6 @@
     var span = document.getElementsByClassName("close")[0];
 
 
-    console.log(locati[0]);
     btn.onclick = function() {
         modal.style.display = "block";
     };
@@ -378,6 +488,28 @@
             modal.style.display = "none";
         }
     };
+
+    var modalEditar = document.getElementById('myModalEditar');
+
+    var btnEditar = document.getElementById("myBtnEditar");
+
+    var spanEditar = document.getElementsByClassName("closeEditar")[0];
+
+
+    btnEditar.onclick = function() {
+        modalEditar.style.display = "block";
+    };
+
+    spanEditar.onclick = function() {
+        modalEditar.style.display = "none";
+    };
+
+    window.onclick = function(event) {
+        if (event.target == modalEditar) {
+            modalEditar.style.display = "none";
+        }
+    };
+
 
     var modalBorrar = document.getElementById('myModalBorrar');
 
