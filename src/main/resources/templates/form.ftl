@@ -58,134 +58,7 @@
         }
     </style>
 
-    <script>
 
-        window.onload = function() {
-            encuestasListado();
-        };
-
-        function hayTabla(encuestaList) {
-            var tabla = document.createElement("table");
-            tabla.className = "table";
-            var row = tabla.insertRow();
-            row.style.backgroundColor = "lightblue";
-            row.insertCell().textContent = "ID";
-            row.insertCell().textContent = "Nombre";
-            row.insertCell().textContent = "Sector";
-            row.insertCell().textContent = "Nivel";
-
-            for (var key in encuestaList) {
-
-                row = tabla.insertRow();
-                row.insertCell().textContent = ""+encuestaList[key].id;
-                row.insertCell().textContent = ""+encuestaList[key].nombre;
-                row.insertCell().textContent = ""+encuestaList[key].sector;
-                row.insertCell().textContent = ""+encuestaList[key].nivel;
-
-
-
-            }
-
-            document.getElementById("encuestasTabla").innerHTML="";
-            document.getElementById("encuestasTabla").appendChild(tabla);
-        }
-
-        function encuestasListado() {
-
-            var data = dataBase.result.transaction(["encuestas"]);
-            var encuestas = data.objectStore("encuestas");
-            var contador = 0;
-            var encuestaDatos=[];
-
-
-            encuestas.openCursor().onsuccess=function(e) {
-                var cursor = e.target.result;
-                if(cursor){
-                    contador++;
-
-                    encuestaDatos.push(cursor.value);
-
-
-                    cursor.continue();
-
-                }else {
-                    console.log("La cantidad de registros recuperados es: "+contador);
-                }
-            };
-
-            data.oncomplete = function () {
-                var i = 0;
-                for (var key in encuestaDatos) {
-                    loc[i] ={'nom': encuestaDatos[key].nombre,
-                    'lat': parseFloat(encuestaDatos[key].latitud),
-                    'lon': parseFloat(encuestaDatos[key].longitud),
-                    'n':  i+1};
-
-                    i = i +1;
-                }
-                hayTabla(encuestaDatos);
-
-
-            }
-
-        }
-
-        function agregarEncuesta() {
-            var db = dataBase.result;
-            var transaccion = db.transaction(["encuestas"], "readwrite");
-
-            transaccion.onerror = function (e) {
-                alert(request.error.name + '\n\n' + request.error.message);
-            };
-
-            transaccion.oncomplete = function (e) {
-                document.querySelector("#nombre").value = '';
-                modal.style.display = "none";
-                encuestasListado();
-            };
-
-            var encuestas = transaccion.objectStore("encuestas");
-
-
-            var request = encuestas.put({
-                nombre: document.querySelector("#nombre").value,
-                sector: document.querySelector("#sector").value,
-                nivel: document.querySelector("#nivel").value,
-                latitud: lati,
-                longitud: long
-
-
-
-        });
-
-
-            request.onerror = function (e) {
-                var mensaje = "Error: "+e.target.errorCode;
-                console.error(mensaje);
-                alert(mensaje)
-            };
-
-        }
-
-        function borrarEncuesta() {
-
-            var idEncuesta = parseInt(document.querySelector("#idBorrar").value);
-
-            var data = dataBase.result.transaction(["encuestas"], "readwrite");
-            var encuestas = data.objectStore("encuestas");
-
-            encuestas.delete(idEncuesta).onsuccess = function (e) {
-                modalBorrar.style.display = "none";
-                encuestasListado();
-            };
-            encuestas.delete(idEncuesta).onerror = function (e) {
-                console.log("Error al borrar")
-            };
-        }
-
-
-
-        </script>
 </head>
 
 <body>
@@ -211,6 +84,7 @@
         <!-- The Modal -->
         <input type="hidden" id="lati" >
         <input type="hidden" id="long" >
+
         <div id="myModal" class="modal">
     <div class="modal-content">
         <span class="close">&times;</span>
@@ -283,11 +157,26 @@
 </div>
 
 <script>
-
-    var indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB
+    var indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
 
     var long;
     var lati;
+    var locati = {};
+
+    var loc = {};
+    var geoSettings = {
+        enableHighAccuracy: true,
+        timeout: 6000,
+        maximumAge: 0
+    };
+
+    navigator.geolocation.getCurrentPosition(function(pos){
+        var coor = pos.coords;
+        lati = coor.latitude;
+        long = coor.longitude;
+    }, function(){
+        alert("No tiene permiso");
+    }, geoSettings);
 
 
     var dataBase = indexedDB.open("encuestasPUCMM", 1);
@@ -305,12 +194,167 @@
 
     dataBase.onsuccess = function (e) {
         console.log('Proceso ejecutado de forma correctamente');
+
         encuestasListado();
     };
 
     dataBase.onerror = function (e) {
         console.error('Error en el proceso: '+e.target.errorCode);
     };
+
+    window.onload = function() {
+        encuestasListado();
+    };
+
+    function hayTabla(encuestaList) {
+        var tabla = document.createElement("table");
+        tabla.className = "table";
+        var row = tabla.insertRow();
+        row.style.backgroundColor = "lightblue";
+        row.insertCell().textContent = "ID";
+        row.insertCell().textContent = "Nombre";
+        row.insertCell().textContent = "Sector";
+        row.insertCell().textContent = "Nivel";
+
+        for (var key in encuestaList) {
+
+            row = tabla.insertRow();
+            row.insertCell().textContent = ""+encuestaList[key].id;
+            row.insertCell().textContent = ""+encuestaList[key].nombre;
+            row.insertCell().textContent = ""+encuestaList[key].sector;
+            row.insertCell().textContent = ""+encuestaList[key].nivel;
+
+
+
+        }
+
+        document.getElementById("encuestasTabla").innerHTML="";
+        document.getElementById("encuestasTabla").appendChild(tabla);
+    }
+
+    function encuestasListado() {
+
+        var data = dataBase.result.transaction(["encuestas"]);
+        var encuestas = data.objectStore("encuestas");
+        var contador = 0;
+        var encuestaDatos=[];
+
+
+        encuestas.openCursor().onsuccess=function(e) {
+            var cursor = e.target.result;
+            if(cursor){
+                contador++;
+
+                encuestaDatos.push(cursor.value);
+
+
+                cursor.continue();
+
+            }else {
+                console.log("La cantidad de registros recuperados es: "+contador);
+            }
+        };
+
+        data.oncomplete = function () {
+
+
+            var map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 10,
+                center: new google.maps.LatLng(19.44, -70.677),
+                mapTypeId: google.maps.MapTypeId.ROADMAP
+            });
+
+            var infowindow = new google.maps.InfoWindow();
+
+
+            var marker, i = 0;
+            for (var key in encuestaDatos) {
+
+                marker = new google.maps.Marker({
+                    position: new google.maps.LatLng(parseFloat(encuestaDatos[key].latitud), parseFloat(encuestaDatos[key].longitud)),
+                    map: map
+                });
+
+                google.maps.event.addListener(marker, 'click', (function(marker, i) {
+                    return function() {
+                        infowindow.setContent(encuestaDatos[key].nombre);
+                        infowindow.open(map, marker);
+                    }
+                })(marker, i));
+                i = i +1;
+            }
+            hayTabla(encuestaDatos);
+            return encuestaDatos;
+
+
+        }
+
+    }
+
+    function getLocations(encuestaDatos) {
+
+
+        return loc;
+    }
+
+
+    function agregarEncuesta() {
+        var db = dataBase.result;
+        var transaccion = db.transaction(["encuestas"], "readwrite");
+
+        transaccion.onerror = function (e) {
+            alert(request.error.name + '\n\n' + request.error.message);
+        };
+
+        transaccion.oncomplete = function (e) {
+            document.querySelector("#nombre").value = '';
+            modal.style.display = "none";
+            encuestasListado();
+        };
+
+        var encuestas = transaccion.objectStore("encuestas");
+
+
+        var request = encuestas.put({
+            nombre: document.querySelector("#nombre").value,
+            sector: document.querySelector("#sector").value,
+            nivel: document.querySelector("#nivel").value,
+            latitud: lati,
+            longitud: long
+
+
+
+        });
+
+
+        request.onerror = function (e) {
+            var mensaje = "Error: "+e.target.errorCode;
+            console.error(mensaje);
+            alert(mensaje)
+        };
+
+    }
+
+    function borrarEncuesta() {
+
+        var idEncuesta = parseInt(document.querySelector("#idBorrar").value);
+
+        var data = dataBase.result.transaction(["encuestas"], "readwrite");
+        var encuestas = data.objectStore("encuestas");
+
+        encuestas.delete(idEncuesta).onsuccess = function (e) {
+            modalBorrar.style.display = "none";
+            encuestasListado();
+        };
+        encuestas.delete(idEncuesta).onerror = function (e) {
+            console.log("Error al borrar")
+        };
+    }
+
+
+
+</script>
+<script>
 
 
     var modal = document.getElementById('myModal');
@@ -319,6 +363,8 @@
 
     var span = document.getElementsByClassName("close")[0];
 
+
+    console.log(locati[0]);
     btn.onclick = function() {
         modal.style.display = "block";
     };
@@ -373,93 +419,14 @@
         }
     };
 
-    var geoSettings = {
-        enableHighAccuracy: true,
-        timeout: 6000,
-        maximumAge: 0
-    };
-    var loc = {};
-    $(document).ready(function(){
-
-        navigator.geolocation.getCurrentPosition(function(pos){
-            var coor = pos.coords;
-            lati = coor.latitude;
-            long = coor.longitude;
-        }, function(){
-            alert("No tiene permiso");
-        }, geoSettings);
-
-
-    });
-
-
-    var data = dataBase.result.transaction(["encuestas"]);
-    var encuestas = data.objectStore("encuestas");
-    var contador = 0;
-    var encuestaDatos=[];
-
-
-    encuestas.openCursor().onsuccess=function(e) {
-        var cursor = e.target.result;
-        if(cursor){
-            contador++;
-
-            encuestaDatos.push(cursor.value);
-
-
-            cursor.continue();
-
-        }else {
-            console.log("La cantidad de registros recuperados es: "+contador);
-        }
-    };
-
-    data.oncomplete = function () {
-        var i = 0;
-        for (var key in encuestaDatos) {
-            loc[i] ={'nom': encuestaDatos[key].nombre,
-                'lat': parseFloat(encuestaDatos[key].latitud),
-                'lon': parseFloat(encuestaDatos[key].longitud),
-                'n':  i+1};
-
-            i = i +1;
-        }
-
-
-
-    }
-
 
     var locations = [
-        [loc[0].nom, loc[0].lat, loc[0].lon, loc[0].n],
-        ['Coogee Beach', -33.923036, 151.259052, 5],
         ['Cronulla Beach', -34.028249, 151.157507, 3],
         ['Manly Beach', -33.80010128657071, 151.28747820854187, 2],
         ['Maroubra Beach', -33.950198, 151.259302, 1]
     ];
-    var map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 10,
-        center: new google.maps.LatLng(-33.92, 151.25),
-        mapTypeId: google.maps.MapTypeId.ROADMAP
-    });
 
-    var infowindow = new google.maps.InfoWindow();
 
-    var marker, i;
-
-    for (i = 0; i < locations.length; i++) {
-        marker = new google.maps.Marker({
-            position: new google.maps.LatLng(locations[i][1], locations[i][2]),
-            map: map
-        });
-
-        google.maps.event.addListener(marker, 'click', (function(marker, i) {
-            return function() {
-                infowindow.setContent(locations[i][0]);
-                infowindow.open(map, marker);
-            }
-        })(marker, i));
-    }
 </script>
 
 
