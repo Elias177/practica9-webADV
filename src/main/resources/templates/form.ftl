@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html manifest="offline.appcache">
 
 <head>
 
@@ -7,33 +7,70 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Mini Form</title>
+    <title>Sistema de Encuestas PUCMM</title>
 
     <link rel="stylesheet" href="css/demo.css">
     <link rel="stylesheet" href="css/form-mini.css">
+    <script src="js/jquery-3.3.1.slim.js"></script>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <script src="js/bootstrap.min.js"></script>
+    <style>
+        body {font-family: Arial, Helvetica, sans-serif;}
+
+        /* The Modal (background) */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            padding-top: 100px; /* Location of the box */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgb(0,0,0); /* Fallback color */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        }
+
+        /* Modal Content */
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+
+        /* The Close Button */
+        .close {
+            color: #aaaaaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
 
     <script>
-        //dependiendo el navegador busco la referencia del objeto.
         var indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB
 
-        //indicamos el nombre y la versión
-        var dataBase = indexedDB.open("programacion_web", 1);
+        var dataBase = indexedDB.open("encuestasPUCMM", 1);
 
-
-        //se ejecuta la primera vez que se crea la estructura
-        //o se cambia la versión de la base de datos.
         dataBase.onupgradeneeded = function (e) {
-            console.log("Creando la estructura de la tabla");
 
-            //obteniendo la conexión activa
             active = dataBase.result;
 
-            //creando la colección:
-            //En este caso, la colección, tendrá un ID autogenerado.
-            var encuestas = active.createObjectStore("encuestas", { keyPath : 'nombre', autoIncrement : false });
+
+            var encuestas = active.createObjectStore("encuestas", { keyPath : 'id', autoIncrement : true });
 
             //creando los indices. (Dado por el nombre, campo y opciones)
-            encuestas.createIndex('nombre_ord', 'nombre', {unique : false});
+            encuestas.createIndex('ind_id', 'id', {unique : false});
 
         };
 
@@ -45,6 +82,59 @@
         dataBase.onerror = function (e) {
             console.error('Error en el proceso: '+e.target.errorCode);
         };
+
+        function hayTabla(encuestaList) {
+            //creando la tabla...
+            var tabla = document.createElement("table");
+            tabla.className = "table";
+            var filaTabla = tabla.insertRow();
+            filaTabla.style.backgroundColor = "lightblue";
+            filaTabla.insertCell().textContent = "Nombre";
+            filaTabla.insertCell().textContent = "Sector";
+            filaTabla.insertCell().textContent = "Nivel";
+
+            for (var key in encuestaList) {
+                //
+                filaTabla = tabla.insertRow();
+                filaTabla.insertCell().textContent = ""+encuestaList[key].nombre;
+                filaTabla.insertCell().textContent = ""+encuestaList[key].sector;
+                filaTabla.insertCell().textContent = ""+encuestaList[key].nivel;
+            }
+
+            document.getElementById("encuestasTabla").innerHTML="";
+            document.getElementById("encuestasTabla").appendChild(tabla);
+        }
+
+        function encuestasListado() {
+            //por defecto si no lo indico el tipo de transacción será readonly
+            var data = dataBase.result.transaction(["encuestas"]);
+            var encuestas = data.objectStore("encuestas");
+            var contador = 0;
+            var encuestaDatos=[];
+
+            //abriendo el cursor.
+            encuestas.openCursor().onsuccess=function(e) {
+                //recuperando la posicion del cursor
+                var cursor = e.target.result;
+                if(cursor){
+                    contador++;
+                    //recuperando el objeto.
+                    encuestaDatos.push(cursor.value);
+
+                    //Función que permite seguir recorriendo el cursor.
+                    cursor.continue();
+
+                }else {
+                    console.log("La cantidad de registros recuperados es: "+contador);
+                }
+            };
+
+            //Una vez que se realiza la operación llamo la impresión.
+            data.oncomplete = function () {
+                hayTabla(encuestaDatos);
+            }
+
+        }
 
 
         function agregarEncuesta() {
@@ -61,7 +151,7 @@
 
             transaccion.oncomplete = function (e) {
                 document.querySelector("#nombre").value = '';
-                alert('Objeto agregado correctamente');
+                modal.style.display = "none";
             };
 
             //abriendo la colección de datos que estaremos usando.
@@ -73,11 +163,12 @@
                 nombre: document.querySelector("#nombre").value,
                 sector: document.querySelector("#sector").value,
                 nivel: document.querySelector("#nivel").value,
-                latidud: document.querySelector("#latitud").value,
-                longitud: document.querySelector("#longitud").value
+                //latidud: document.querySelector("#latitud").value,
+                //longitud: document.querySelector("#longitud").value
 
 
             });
+
 
             request.onerror = function (e) {
                 var mensaje = "Error: "+e.target.errorCode;
@@ -86,6 +177,8 @@
             };
 
         }
+
+
 
         </script>
 </head>
@@ -103,21 +196,25 @@
     <div class="form-mini-container">
 
 
-        <h1>Informacion</h1>
+        <button id="myBtn">Agregar Encuesta</button>
 
-        <form class="form-mini" method="post" action="#">
+        <!-- The Modal -->
+        <div id="myModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <div class="form-mini" >
 
             <div class="form-row">
-                <input type="text" name="nombre" placeholder="Nombre">
+                <input type="text" id="nombre" placeholder="Nombre">
             </div>
 
             <div class="form-row">
-                <input type="email" name="sector" placeholder="Sector">
+                <input type="text" id="sector" placeholder="Sector">
             </div>
 
             <div class="form-row">
                 <label>
-                    <select name="nivel">
+                    <select id="nivel">
                         <option>Nivel Escolar...</option>
                         <option>Basico</option>
                         <option>Medio</option>
@@ -128,18 +225,53 @@
                 </label>
             </div>
 
-            <input type="hidden" value="" id="lat" name="latitud">
-            <input type="hidden" value="" id="lon" name="longitud">
+
 
             <div class="form-row form-last-row">
-                <button type="submit">Submit Form</button>
+                <button onclick="agregarEncuesta()">Crear Encuesta</button>
             </div>
 
-        </form>
+        </div>
     </div>
+
+    </div>
+    </div>
+
+<button onclick="encuestasListado()">Lista de Encuestas</button>
+    <table id="encuestasTabla" class="table">
+
+    </table>
 
 
 </div>
+
+<script>
+    // Get the modal
+    var modal = document.getElementById('myModal');
+
+    // Get the button that opens the modal
+    var btn = document.getElementById("myBtn");
+
+    // Get the <span> element that closes the modal
+    var span = document.getElementsByClassName("close")[0];
+
+    // When the user clicks the button, open the modal
+    btn.onclick = function() {
+        modal.style.display = "block";
+    }
+
+    // When the user clicks on <span> (x), close the modal
+    span.onclick = function() {
+        modal.style.display = "none";
+    }
+
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+</script>
 
 </body>
 

@@ -21,20 +21,11 @@ public class Main {
 
             StringWriter writer = new StringWriter();
             Map<String, Object> atr = new HashMap<>();
-            Template template = configuration.getTemplate("templates/index.ftl");
-            template.process(atr,writer);
-            return writer;
-        });
-
-        get("/form", (req, res) -> {
-
-
-            StringWriter writer = new StringWriter();
-            Map<String, Object> atr = new HashMap<>();
             Template template = configuration.getTemplate("templates/form.ftl");
             template.process(atr,writer);
             return writer;
         });
+
 
     }
 }
