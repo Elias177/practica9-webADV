@@ -1,0 +1,19 @@
+plugins {
+    id 'java'
+}
+
+group 'web.practica9'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    compile "org.freemarker:freemarker:2.3.28"
+    compile "com.sparkjava:spark-core:2.7.2"
+    compile 'com.sparkjava:spark-debug-tools:0.5'
+}
