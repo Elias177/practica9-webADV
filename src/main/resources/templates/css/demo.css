@@ -55,6 +55,12 @@ ul {
     margin-bottom: 75px;
 }
 
+#map_canvas {
+    width: 100%;
+    height: 95%;
+}
+
+
 ul a{
     text-decoration: none;
     color: #FFF;
@@ -113,12 +119,12 @@ ul li{
 
 /* -- Link to Tutorialzine -- */
 
-.tz-link{
-	text-decoration: none;
-	color: #fff !important;
-	font: bold 36px Arial,Helvetica,sans-serif !important;
+.enable {
+    top: 0.3rem;
+    right: 17.4rem;
 }
 
-.tz-link span{
-	color: #da431c;
+.revoke {
+    top: 0.3rem;
+    right: 0.4rem;
 }
