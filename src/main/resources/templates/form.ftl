@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html manifest="offline.appcache">
+<html>
 
 <head>
 
@@ -143,7 +143,7 @@
             <div class="form-mini" >
                 <span class="close" id="closeBorrar">&times;</span>
                 <div class="form-row">
-                    <input type="text" id="idBorrar" placeholder="Id de la Encuesta">
+                    <input type="text" id="idBorrar" placeholder="Id de la Encuesta" style="min-height: 42px; min-width: 172px; margin: auto; max-height: 42px; max-width: 180px;">
                 </div>
                 <div class="form-row form-last-row">
                     <a class="text-danger">UNA VEZ BORRADA LA ENCUESTA NO SE PUEDE RECUPERAR</a>
