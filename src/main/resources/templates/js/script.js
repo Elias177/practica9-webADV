@@ -9,6 +9,10 @@ var map = new ymaps.Map("map", {
     zoom: 7
 });
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> parent of 581fe79... Cambio a yandex maps
 var geoSettings = {
     enableHighAccuracy: true,
     timeout: 6000,
@@ -48,7 +52,10 @@ dataBase.onerror = function (e) {
 };
 
 window.onload = function() {
+<<<<<<< HEAD
 
+=======
+>>>>>>> parent of 581fe79... Cambio a yandex maps
     encuestasListado();
 };
 
@@ -96,23 +103,54 @@ function encuestasListado() {
 
             cursor.continue();
 
+        }else {
+            console.log("La cantidad de registros recuperados es: "+contador);
         }
     };
 
     data.oncomplete = function () {
 
+<<<<<<< HEAD
 
             var place;
 
-            for (var key in encuestaDatos) {
-                place = new ymaps.Placemark([encuestaDatos[key].latitud, encuestaDatos[key].longitud], { hintContent: 'Encuesta '+encuestaDatos[key].id, balloonContent: encuestaDatos[key].nombre });
-                map.geoObjects.add(place);
+=======
+        try {
+            var map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 10,
+                center: new google.maps.LatLng(19.44, -70.677),
+                mapTypeId: google.maps.MapTypeId.ROADMAP
+            });
 
+            var infowindow = new google.maps.InfoWindow();
+            var marker, i = 0;
+>>>>>>> parent of 581fe79... Cambio a yandex maps
+            for (var key in encuestaDatos) {
+
+                marker = new google.maps.Marker({
+                    position: new google.maps.LatLng(parseFloat(encuestaDatos[key].latitud), parseFloat(encuestaDatos[key].longitud)),
+                    map: map
+                });
+
+                google.maps.event.addListener(marker, 'click', (function(marker, i) {
+                    return function() {
+                        infowindow.setContent(encuestaDatos[key].nombre);
+                        infowindow.open(map, marker);
+                    }
+                })(marker, i));
+                i = i +1;
             }
             hayTabla(encuestaDatos);
             return encuestaDatos;
 
+<<<<<<< HEAD
 
+=======
+        } catch (e) {
+            hayTabla(encuestaDatos);
+            console.log("El mapa no esta disponible offline")  ;                   // "@Scratchpad/2:2:7\n"
+        }
+>>>>>>> parent of 581fe79... Cambio a yandex maps
 
 
 
