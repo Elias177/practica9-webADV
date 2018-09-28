@@ -13,7 +13,8 @@
     <link rel="stylesheet" href="css/form-mini.css">
     <script src="js/jquery-3.3.1.slim.js"></script>
     <link rel="stylesheet" href="css/bootstrap.min.css">
-    <script src="http://maps.google.com/maps/api/js?sensor=false" type="text/javascript"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA_dBRkreJdC4jm80OJW6eR_rSFFQcArLI&language=ja&region=JP">
+    </script>
     <script src="js/bootstrap.min.js"></script>
     <style>
         body {font-family: Arial, Helvetica, sans-serif;}
