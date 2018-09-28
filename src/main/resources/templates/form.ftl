@@ -5,7 +5,7 @@
 
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
 
     <title>Sistema de Encuestas PUCMM</title>
 
@@ -74,7 +74,7 @@
     <div class="form-mini-container">
 
 
-        <button id="myBtn">Agregar Encuesta</button>
+        <button id="myBtn" class="btn btn-success">Agregar Encuesta</button>
         <button class="btn btn-primary btn-xs my-xs-btn" type="button" id="myBtnEditar">
         <span class="glyphicon glyphicon-pencil"></span> Editar
         </button>
@@ -125,7 +125,7 @@
     </div>
 
 
-<button id="btnMap">Mapa</button>
+<button id="btnMap" class="btn btn-primary">Mapa</button>
     <div id="myModalMap" class="modal">
         <div class="modal-content">
             <span class="closeMap">&times;</span>
@@ -324,7 +324,8 @@
                 return encuestaDatos;
 
             } catch (e) {
-                console.log("El mapa no esta disponible offline")                     // "@Scratchpad/2:2:7\n"
+                hayTabla(encuestaDatos);
+                console.log("El mapa no esta disponible offline")  ;                   // "@Scratchpad/2:2:7\n"
             }
 
 
