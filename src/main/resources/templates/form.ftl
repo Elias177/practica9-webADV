@@ -13,7 +13,7 @@
     <script src="js/jquery-3.3.1.slim.js"></script>
     <script src="js/script.js"></script>
     <link rel="stylesheet" href="css/bootstrap.min.css">
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCghO0oWq5kq_EfVWGQjUVbLo_c9gQnNYM">
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCghO0oWq5kq_EfVWGQjUVbLo_c9gQnNYM&callback=data.oncomplete" async defer>
     </script>
     <script src="js/bootstrap.min.js"></script>
     <style>
