@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="css/form-mini.css">
     <script src="js/jquery-3.3.1.slim.js"></script>
     <link rel="stylesheet" href="css/bootstrap.min.css">
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA_dBRkreJdC4jm80OJW6eR_rSFFQcArLI&language=ja&region=JP">
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA_dBRkreJdC4jm80OJW6eR_rSFFQcArLI">
     </script>
     <script src="js/bootstrap.min.js"></script>
     <style>
@@ -215,7 +215,7 @@
         lati = coor.latitude;
         long = coor.longitude;
     }, function(){
-        alert("No tiene permiso");
+        alert("No tiene permiso de localizacion");
     }, geoSettings);
 
 
