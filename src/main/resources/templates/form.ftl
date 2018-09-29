@@ -75,13 +75,13 @@
 
 
         <button id="myBtn" class="btn btn-success btn-xs my-xs-btn" type="button">
-            <span class="glyphicon glyphicon-plus-sign"></span> Agregar Encuesta
+            <span class="glyphicon glyphicon-plus"></span> Agregar Encuesta
         </button>
         <button class="btn btn-primary btn-xs my-xs-btn" type="button" id="myBtnEditar">
             <span class="glyphicon glyphicon-pencil"></span> Editar
         </button>
         <button class="btn btn-danger btn-xs my-xs-btn" type="button" id="btnBorrar">
-            <span class="glyphicon glyphicon-alert"></span>
+            <span class="glyphicon glyphicon-minus"></span>
             Borrar</button>
         <!-- The Modal -->
         <input type="hidden" id="lati" >

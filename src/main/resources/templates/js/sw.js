@@ -8,7 +8,12 @@ self.addEventListener('install', function(event) {
                 '/css/bootstrap.min.css',
                 '/js/bootstrap.min.js',
                 '/js/jquery-3.3.1.slim.js',
-                '/js/script.js'
+                '/js/script.js',
+                '/fonts/glyphicons-halflings-regular.eot',
+                '/fonts/glyphicons-halflings-regular.svg',
+                '/fonts/glyphicons-halflings-regular.ttf',
+                '/fonts/glyphicons-halflings-regular.woff'
+
             ]);
         })
     );
@@ -16,15 +21,10 @@ self.addEventListener('install', function(event) {
 
 self.addEventListener('fetch', function(event) {
     event.respondWith(caches.match(event.request).then(function(response) {
-        // caches.match() always resolves
-        // but in case of success response will have value
         if (response !== undefined) {
             return response;
         } else {
             return fetch(event.request).then(function (response) {
-                // response may be used only once
-                // we need to save clone to put one copy in cache
-                // and serve second one
                 var responseClone = response.clone();
 
                 caches.open('v1').then(function (cache) {
